@@ -17,6 +17,7 @@
 #include <ostream>
 #include <sstream>
 #include <vector>
+//PosibilitySet is alias to std::bitset<9>
 typedef std::bitset<9> PosibilitySet;
 
 
@@ -24,9 +25,9 @@ typedef std::bitset<9> PosibilitySet;
  * Sudoku class defines class Field and wraps array 9*9 of that class.
  * Class Field covers some functionalities of PosibilitySet,
  * It can be cast from PosibilitySet to Sudoku::Field
+ * Class Sudoku has only one constructor, which get's std:istream from which it read's input,
  *
  */
-
 class Sudoku {
 
 public:
@@ -35,6 +36,8 @@ public:
 	//Reads input, throws exception if there is something wrong with the formatting of the input, (good formating is for example:
 	// 1 2 3 0 0 4 5 7 0
 	// 0 3 7 9 2 0 0 0 0 etc. where numbers from 1 to 9 are values in the table, and 0 is field left free
+	//Warning: there is no checking of proper data type for the input stream so if u pass it a character like 'a'
+	//this constructor throws std::logic_error if data formated badly
 	Sudoku(std::istream& input) {
 		constexpr static std::array<Number,9> initTable={{Number::ONE,Number::TWO,Number::THREE,Number::FOUR,Number::FIVE,Number::SIX,Number::SEVEN,Number::EIGHT,Number::NINE}};
 		for (int i=0; i<81; i++) {
@@ -56,6 +59,7 @@ public:
 			row[i]=column[i]=rect[i/3][i%3]=fullOption();
 		}
 	}
+	// simple function returning  Sudoku::Number from std::size_t
 	static Number getNumber(const size_t& val) {
 		constexpr static std::array<Number,9> initTable={{Number::ONE,Number::TWO,Number::THREE,Number::FOUR,Number::FIVE,Number::SIX,Number::SEVEN,Number::EIGHT,Number::NINE}};
 		if (val<1 || val>9) {
@@ -65,7 +69,7 @@ public:
 		}
 		else return initTable[val-1];
 	}
-	// Method below should throw some kind of "out of range" exception (only ind<=9 returns proper set)
+	// Methods below should throw some kind of "out of range" exception when passed wrong argument (only ind<=9 returns proper set)
 	static PosibilitySet singleOption(size_t ind)  {
 		size_t i=1;
 		i<<=ind-1;
@@ -79,7 +83,7 @@ public:
 	static PosibilitySet fullOption() {
 		return PosibilitySet(1023);
 	}
-	// Some testing
+	// Some testing methods left from "development" process
 	static const char* test(const PosibilitySet& a,const PosibilitySet& b) {
 		Field af(a);
 		Field bf(b);
@@ -108,6 +112,10 @@ public:
 	}
 
 	/*
+	 *Class Field defines an common interface to both empty and filled Fields in sudoku table.
+	 *It's used for implementing algorithm therefore i don't recommend using it somewhere else.
+	 *Class Field is meant to allow for easy manipulation of contents of sudoku
+	 *Important note: operator/= have different logic than other operators used in this class
 	 *
 	 */
 	class Field {
@@ -181,11 +189,20 @@ public:
 
 	};
 
+	/*
+	 * Here begins implementation of special interface of class Sudoku, it allows for easy access of the Field at position (i,j)
+	 * but also provides easy acces to the "virtual" fields of it's row/column and 3x3 square,
+	 */
+
 	class ArrayInterface;
 	inline ArrayInterface operator[](size_t ind) {
 		return ArrayInterface(content[ind],row,column,rect[ind/3],ind);
 	}
 	class AccesInterface;
+	/*
+	 * Class ArrayInterface cannot be created/copied/(i didn't blocked move)
+	 * It is made to imitate behavior of two dimensional array for our sudoku
+	 */
 	class ArrayInterface {
 		typedef std::array<Field,9>& nineRef;
 		typedef std::array<Field,3>& threeRef;
@@ -206,6 +223,12 @@ public:
 		ArrayInterface& operator=(const ArrayInterface&);
 	};
 
+	/**
+	 * Class AccesInterface provides easy access to the field of the sudoku 9x9 table, treating it
+	 * as struct containing four other fields. Setting field impacts other fields in it's row/column/square
+	 * For each of those categories we have virtual fields allowing for easy changing possibilities and what's
+	 * more important restoring change when needed
+	 */
 	class AccesInterface {
 	public:
 		Field& field;

@@ -9,15 +9,7 @@
 #include "solver.h"
 #include <iostream>
 
-class staticer {
-public:
-	static int grzyb() {
-		return 34;
-	}
-	static int brud() {
-		return 43;
-	}
-};
+//simple test program
 
 int main() {
 	Sudoku grzyb(std::cin);

@@ -26,3 +26,9 @@
 *.exe
 *.out
 *.app
+
+#directories to ignore
+Debug
+
+#make files to ignore
+*.mk
